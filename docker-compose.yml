@@ -42,6 +42,39 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+  agentmemory:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - iii-engine
+    ports:
+      - "127.0.0.1:3113:3113"
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+
+      # AgentMemory viewer
+      AGENTMEMORY_VIEWER_PORT: 3113
+      AGENTMEMORY_VIEWER_HOST: 0.0.0.0
+
+      # Kết nối tới iii-engine qua Docker service name
+      III_REST_PORT: 3111
+      III_STREAMS_PORT: 3112
+      III_ENGINE_URL: ws://iii-engine:49134
+      AGENTMEMORY_URL: http://iii-engine:3111
+
+      # Nếu app cần CORS/domain
+      AGENTMEMORY_PUBLIC_URL: https://server-100.tail05b26f.ts.net
+
+    volumes:
+      - agentmemory-data:/app/data
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 volumes:
   iii-data:
