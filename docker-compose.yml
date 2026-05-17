@@ -33,7 +33,6 @@ services:
       - "3111:3111"
       - "3112:3112"
       - "9464:9464"
-      - "3113:3113"
     volumes:
       - iii-data:/data
       - ./iii-config.docker.yaml:/app/config.yaml:ro
