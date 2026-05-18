@@ -6,8 +6,8 @@ RUN apt-get update \
   && apt-get install -y --no-install-recommends curl ca-certificates git \
   && rm -rf /var/lib/apt/lists/*
 
-COPY package*.json ./
-RUN npm install
+COPY package.json ./
+RUN npm install --legacy-peer-deps
 
 COPY . .
 RUN npm run build
