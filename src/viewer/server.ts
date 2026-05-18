@@ -53,6 +53,23 @@ const ALLOWED_HOSTS_OVERRIDE = (process.env.VIEWER_ALLOWED_HOSTS || "")
   .map((h) => h.trim().toLowerCase())
   .filter(Boolean);
 
+function resolveViewerHost(): string {
+  const host = process.env["AGENTMEMORY_VIEWER_HOST"]?.trim();
+  return host || "127.0.0.1";
+}
+
+function resolveUpstreamOrigin(restPort: number): string {
+  const base = process.env["AGENTMEMORY_URL"]?.trim();
+  if (base) {
+    try {
+      return new URL(base).origin;
+    } catch {
+      // Fall through to loopback default.
+    }
+  }
+  return `http://127.0.0.1:${restPort}`;
+}
+
 export function buildAllowedHosts(
   origins: string[],
   listenPort: number,
@@ -139,6 +156,8 @@ export function startViewerServer(
   restPort?: number,
 ): Server {
   const resolvedRestPort = restPort ?? port - 2;
+  const upstreamOrigin = resolveUpstreamOrigin(resolvedRestPort);
+  const listenHost = resolveViewerHost();
   const requestedPort = port;
   // Computed lazily on first request — `port` may be 0 here (OS-assigned)
   // or the EADDRINUSE retry loop below may bump us to a different port,
@@ -212,7 +231,15 @@ export function startViewerServer(
     }
 
     try {
-      await proxyToRestApi(resolvedRestPort, pathname, qs, method, req, res, secret);
+      await proxyToRestApi(
+        upstreamOrigin,
+        pathname,
+        qs,
+        method,
+        req,
+        res,
+        secret,
+      );
     } catch (err) {
       console.error(`[viewer] proxy error on ${method} ${pathname}:`, err);
       json(res, 502, { error: "upstream error" }, req);
@@ -223,15 +250,16 @@ export function startViewerServer(
   let currentPort = requestedPort;
 
   const tryListen = (): void => {
-    server.listen(currentPort, "127.0.0.1");
+    server.listen(currentPort, listenHost);
   };
 
   server.on("listening", () => {
+    const displayHost = listenHost === "0.0.0.0" ? "localhost" : listenHost;
     if (currentPort === requestedPort) {
-      console.log(`[agentmemory] Viewer: http://localhost:${currentPort}`);
+      console.log(`[agentmemory] Viewer: http://${displayHost}:${currentPort}`);
     } else {
       console.log(
-        `[agentmemory] Viewer started on http://localhost:${currentPort} (fallback from ${requestedPort})`,
+        `[agentmemory] Viewer started on http://${displayHost}:${currentPort} (fallback from ${requestedPort})`,
       );
     }
   });
@@ -258,7 +286,7 @@ export function startViewerServer(
 }
 
 async function proxyToRestApi(
-  restPort: number,
+  upstreamOrigin: string,
   pathname: string,
   qs: string,
   method: string,
@@ -270,7 +298,7 @@ async function proxyToRestApi(
     ? pathname
     : `/agentmemory${pathname.startsWith("/") ? pathname : "/" + pathname}`;
 
-  const upstreamUrl = `http://127.0.0.1:${restPort}${upstreamPath}${qs ? "?" + qs : ""}`;
+  const upstreamUrl = `${upstreamOrigin}${upstreamPath}${qs ? "?" + qs : ""}`;
 
   const headers: Record<string, string> = {};
   if (secret) {
