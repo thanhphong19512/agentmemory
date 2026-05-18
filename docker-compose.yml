@@ -29,10 +29,8 @@ services:
       iii-init:
         condition: service_completed_successfully
     ports:
-      - "49134:49134"
       - "3111:3111"
       - "3112:3112"
-      - "9464:9464"
     volumes:
       - iii-data:/data
       - ./iii-config.docker.yaml:/app/config.yaml:ro
@@ -49,23 +47,33 @@ services:
     depends_on:
       - iii-engine
     ports:
-      - "127.0.0.1:3113:3113"
+      - "3113:3113"
     environment:
       NODE_ENV: production
       HOST: 0.0.0.0
 
-      # AgentMemory viewer
       AGENTMEMORY_VIEWER_PORT: 3113
       AGENTMEMORY_VIEWER_HOST: 0.0.0.0
 
-      # Kết nối tới iii-engine qua Docker service name
       III_REST_PORT: 3111
       III_STREAMS_PORT: 3112
       III_ENGINE_URL: ws://iii-engine:49134
       AGENTMEMORY_URL: http://iii-engine:3111
 
-      # Nếu app cần CORS/domain
-      AGENTMEMORY_PUBLIC_URL: https://server-100.tail05b26f.ts.net
+      # Tailscale (cách A): set in .env — openssl rand -hex 32
+      AGENTMEMORY_SECRET: ${AGENTMEMORY_SECRET:?Set AGENTMEMORY_SECRET in .env}
+      AGENTMEMORY_PUBLIC_URL: http://server-100.tail05b26f.ts.net:3111
+      AGENTMEMORY_VIEWER_URL: http://server-100.tail05b26f.ts.net:3113
+      VIEWER_ALLOWED_ORIGINS: >-
+        http://server-100.tail05b26f.ts.net:3113,
+        http://server-100.tail05b26f.ts.net:3111,
+        http://localhost:3113,
+        http://127.0.0.1:3113,
+        http://localhost:3111,
+        http://127.0.0.1:3111
+      VIEWER_ALLOWED_HOSTS: >-
+        server-100.tail05b26f.ts.net:3113,
+        server-100.tail05b26f.ts.net:3111
 
     volumes:
       - agentmemory-data:/app/data

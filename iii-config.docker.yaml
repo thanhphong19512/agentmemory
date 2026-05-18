@@ -10,8 +10,8 @@ workers:
           - "http://localhost:3113"
           - "http://127.0.0.1:3111"
           - "http://127.0.0.1:3113"
-          - "http://server-100.tail05b26f.ts.net"
-          - "https://server-100.tail05b26f.ts.net"
+          - "http://server-100.tail05b26f.ts.net:3111"
+          - "http://server-100.tail05b26f.ts.net:3113"
         allowed_methods:
           - GET
           - POST
