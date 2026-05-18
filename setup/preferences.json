@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "lastAgent": "claude-code",
+  "lastAgents": [
+    "claude-code",
+    "codex",
+    "cursor",
+    "claude-desktop",
+    "opencode"
+  ],
+  "lastProvider": null,
+  "skipSplash": true,
+  "skipNpxHint": true,
+  "skipGlobalInstall": true,
+  "skipConsoleInstall": true,
+  "firstRunAt": "2026-05-18T00:00:00.000Z"
+}

@@ -77,6 +77,7 @@ services:
 
     volumes:
       - agentmemory-data:/app/data
+      - ./setup/preferences.json:/root/.agentmemory/preferences.json:ro
     restart: unless-stopped
     logging:
       driver: json-file
